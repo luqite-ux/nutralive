@@ -67,12 +67,12 @@ const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID?.trim() || '9a34602d-2259-43
 function inferSectors(product: { name: string; category: string; uses: string[]; description: string }): string[] {
   const hay = `${product.name} ${product.uses.join(' ')} ${product.description}`.toLowerCase()
   const out = new Set<string>()
-  if (/skin|collagen|antioxidant|phycocyanin|astaxanthin|hyaluronic|grape|resveratrol|green tea|cosmetic|beauty|pearl|tocopherol/.test(hay)) out.add('skin-care')
+  if (/skin|collagen|antioxidant|phycocyanin|astaxanthin|hyaluronic|grape|resveratrol|green tea|cosmetic|beauty|pearl|tocopherol|aloe|acai|pomegranate|cranberry/.test(hay)) out.add('skin-care')
   if (/joint|turmeric|curcumin|boswellia|glucosamine|chondroitin|msm|hyaluronic|ginger|cissus|collagen/.test(hay)) out.add('joint-health')
-  if (/cardio|berberine|coq10|coenzyme|omega|dha|phytosterol|hawthorn|garlic|ginkgo|resveratrol|beet|polyphenol|nattokinase|red yeast/.test(hay)) out.add('cardiovascular-health')
-  if (/cognit|brain|memory|ginkgo|phosphatidyl|lion|bacopa|theanine|ashwagandha|rhodiola|dha|nmn|focus|neuro/.test(hay)) out.add('cognition-improvement')
-  if (/sport|muscle|amino|bcaa|leucine|isoleucine|valine|glutamine|arginine|citrulline|carnitine|taurine|creatine|beet|protein|chlorella|spirulina|maca|tribulus|tongkat/.test(hay)) out.add('sports-nutrition')
-  if (/vision|eye|lutein|zeaxanthin|bilberry|blueberry|astaxanthin|marigold|anthocyanin/.test(hay)) out.add('vision-protection')
+  if (/cardio|berberine|coq10|coenzyme|omega|dha|phytosterol|hawthorn|garlic|ginkgo|resveratrol|beet|polyphenol|nattokinase|red yeast|artichoke|cinnamon/.test(hay)) out.add('cardiovascular-health')
+  if (/cognit|brain|memory|ginkgo|phosphatidyl|lion|bacopa|theanine|ashwagandha|rhodiola|dha|nmn|focus|neuro|inositol|tryptophan/.test(hay)) out.add('cognition-improvement')
+  if (/sport|muscle|amino|bcaa|leucine|isoleucine|valine|glutamine|arginine|citrulline|carnitine|taurine|creatine|beet|protein|chlorella|spirulina|maca|alanine|mct|wheat|kale/.test(hay)) out.add('sports-nutrition')
+  if (/vision|eye|lutein|zeaxanthin|bilberry|blueberry|astaxanthin|marigold|anthocyanin|goji|black currant/.test(hay)) out.add('vision-protection')
   if (out.size === 0) out.add('cardiovascular-health')
   return [...out]
 }
@@ -83,22 +83,25 @@ const fetchCategoriesCached = unstable_cache(
     if (!supabase) return []
     const { data, error } = await supabase
       .from('product_categories')
-      .select('id,slug,name,name_i18n,description,description_i18n,image_url,sort_order')
+      .select('id,slug,name,name_en,name_i18n,description,description_en,description_i18n,sort_order,extra_data')
       .eq('tenant_id', TENANT_ID)
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
     if (error || !data) return []
-    return data.map((row) => ({
-      id: row.id,
-      slug: row.slug as CategorySlug,
-      name: getLocalizedText(row.name_i18n as I18nField, locale, row.name || row.slug),
-      description: getLocalizedText(row.description_i18n as I18nField, locale, row.description || ''),
-      image: row.image_url || undefined,
-      sortOrder: row.sort_order ?? 0,
-    }))
+    return data.map((row) => {
+      const extra = (row.extra_data && typeof row.extra_data === 'object' ? row.extra_data : {}) as Record<string, unknown>
+      return {
+        id: row.id,
+        slug: row.slug as CategorySlug,
+        name: getLocalizedText(row.name_i18n as I18nField, locale, row.name_en || row.name || row.slug),
+        description: getLocalizedText(row.description_i18n as I18nField, locale, row.description_en || row.description || ''),
+        image: typeof extra.image_url === 'string' ? extra.image_url : undefined,
+        sortOrder: row.sort_order ?? 0,
+      }
+    })
   },
-  ['nutralive-categories'],
+  ['nutralive-categories-v2'],
   { revalidate: 60 },
 )
 
@@ -109,12 +112,12 @@ const fetchProductsCached = unstable_cache(
     const [catsRes, prodsRes] = await Promise.all([
       supabase
         .from('product_categories')
-        .select('id,slug,name,name_i18n')
+        .select('id,slug,name,name_en,name_i18n')
         .eq('tenant_id', TENANT_ID),
       supabase
         .from('products')
         .select(
-          'id,slug,name,name_i18n,category_id,description,description_i18n,image_url,specs,features_i18n,applications_i18n,advantages_i18n,extra_data,updated_at,sort_order',
+          'id,slug,name,name_en,name_i18n,category,category_slug,description,description_en,description_i18n,image_url,specs,features,features_i18n,applications,applications_i18n,advantages,advantages_i18n,extra_data,updated_at,sort_order',
         )
         .eq('tenant_id', TENANT_ID)
         .eq('is_active', true)
@@ -123,18 +126,20 @@ const fetchProductsCached = unstable_cache(
     ])
 
     if (prodsRes.error || !prodsRes.data) return []
-    const catById = new Map<string, { slug: CategorySlug; name: string }>()
+    const catBySlug = new Map<string, { slug: CategorySlug; name: string }>()
     for (const c of catsRes.data ?? []) {
-      catById.set(c.id, {
-        slug: c.slug as CategorySlug,
-        name: getLocalizedText(c.name_i18n as I18nField, locale, c.name || c.slug),
+      const slug = c.slug as CategorySlug
+      catBySlug.set(slug, {
+        slug,
+        name: getLocalizedText(c.name_i18n as I18nField, locale, c.name_en || c.name || slug),
       })
     }
 
     return prodsRes.data.map((row) => {
-      const cat = (row.category_id && catById.get(row.category_id)) || {
-        slug: 'herbal-extracts' as CategorySlug,
-        name: 'Herbal Extracts',
+      const slugKey = (row.category_slug || row.category || 'herbal-extracts') as CategorySlug
+      const cat = catBySlug.get(slugKey) || {
+        slug: slugKey,
+        name: slugKey.replace(/-/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()),
       }
       const rawSpecs = (row.specs && typeof row.specs === 'object' ? row.specs : {}) as Record<string, unknown>
       const specs: Record<string, string> = {}
@@ -149,11 +154,25 @@ const fetchProductsCached = unstable_cache(
         : []
       const primaryImg = row.image_url || galleryRaw[0] || ''
       const gallery = [...new Set([primaryImg, ...galleryRaw].filter(Boolean))]
-      const name = getLocalizedText(row.name_i18n as I18nField, locale, row.name || row.slug)
-      const description = getLocalizedText(row.description_i18n as I18nField, locale, row.description || '')
-      const features = getLocalizedList(row.features_i18n as Record<string, string[]>, locale, [])
-      const uses = getLocalizedList(row.applications_i18n as Record<string, string[]>, locale, ['Dietary supplements', 'Functional food & beverage'])
-      const advantages = getLocalizedList(row.advantages_i18n as Record<string, string[]>, locale, [])
+      const name = getLocalizedText(row.name_i18n as I18nField, locale, row.name_en || row.name || row.slug)
+      const description = getLocalizedText(row.description_i18n as I18nField, locale, row.description_en || row.description || '')
+      const features = getLocalizedList(
+        row.features_i18n as Record<string, string[]>,
+        locale,
+        Array.isArray(row.features) ? (row.features as string[]) : [],
+      )
+      const uses = getLocalizedList(
+        row.applications_i18n as Record<string, string[]>,
+        locale,
+        Array.isArray(row.applications) && row.applications.length > 0
+          ? (row.applications as string[])
+          : ['Dietary supplements', 'Functional food & beverage'],
+      )
+      const advantages = getLocalizedList(
+        row.advantages_i18n as Record<string, string[]>,
+        locale,
+        Array.isArray(row.advantages) ? (row.advantages as string[]) : [],
+      )
       const spec = specs['Specification'] || specs['Assay / Spec'] || specs['Active Content'] || specs['Spec'] || 'Standardized commercial specification'
       const cas = specs['CAS No.'] || specs['CAS'] || undefined
       const source = specs['Botanical / Raw Source'] || specs['Source'] || specs['Origin'] || 'Selected botanical & nutraceutical raw material'
@@ -191,7 +210,7 @@ const fetchProductsCached = unstable_cache(
       }
     })
   },
-  ['nutralive-products'],
+  ['nutralive-products-v2'],
   { revalidate: 60 },
 )
 
@@ -217,13 +236,15 @@ export function getFullIngredientDatabase(): FullIngredientRow[] {
   const items = Array.isArray(fullDatabaseRaw)
     ? fullDatabaseRaw
     : (fullDatabaseRaw as { items?: unknown[] })?.items ?? []
-  return (items as Record<string, unknown>[]).map((item) => ({
-    name: String(item.name || item.product_name || '').trim(),
-    category: String(item.category || 'Herbal Extracts').trim(),
-    spec: String(item.spec || item.specification || 'Standardized specification').trim(),
-    cas: item.cas ? String(item.cas).trim() : undefined,
-    source: item.source ? String(item.source).trim() : undefined,
-    method: item.method ? String(item.method).trim() : undefined,
-    organic: Boolean(item.organic || /organic/i.test(String(item.category || '') + ' ' + String(item.name || ''))),
-  })).filter((r) => r.name.length > 0)
+  return (items as Record<string, unknown>[])
+    .map((item) => ({
+      name: String(item.name || item.product_name || '').trim(),
+      category: String(item.category || 'Herbal Extracts').trim(),
+      spec: String(item.spec || item.specification || 'Standardized specification').trim(),
+      cas: item.cas ? String(item.cas).trim() : undefined,
+      source: item.source ? String(item.source).trim() : undefined,
+      method: item.method ? String(item.method).trim() : undefined,
+      organic: Boolean(item.organic || /organic/i.test(`${String(item.category || '')} ${String(item.name || '')}`)),
+    }))
+    .filter((r) => r.name.length > 0)
 }

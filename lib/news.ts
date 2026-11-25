@@ -21,9 +21,10 @@ const fetchPublishedArticles = unstable_cache(
     if (!supabase) return []
     const { data, error } = await supabase
       .from('articles')
-      .select('id,slug,title,title_i18n,summary,summary_i18n,content,content_i18n,featured_image,published_at,updated_at,sort_order')
+      .select('id,slug,title,title_en,title_i18n,excerpt,excerpt_en,excerpt_i18n,content,content_en,content_i18n,featured_image,published_at,updated_at,sort_order')
       .eq('tenant_id', TENANT_ID)
-      .eq('status', 'published')
+      .eq('is_published', true)
+      .is('archived_at', null)
       .order('sort_order', { ascending: true })
       .order('published_at', { ascending: false, nullsFirst: false })
       .order('id', { ascending: true })
@@ -32,15 +33,15 @@ const fetchPublishedArticles = unstable_cache(
     return data.map((row) => ({
       id: row.id,
       slug: row.slug,
-      title: getLocalizedText(row.title_i18n as I18nField, locale, row.title || ''),
-      excerpt: getLocalizedText(row.summary_i18n as I18nField, locale, row.summary || ''),
-      content: getLocalizedText(row.content_i18n as I18nField, locale, row.content || ''),
+      title: getLocalizedText(row.title_i18n as I18nField, locale, row.title_en || row.title || ''),
+      excerpt: getLocalizedText(row.excerpt_i18n as I18nField, locale, row.excerpt_en || row.excerpt || ''),
+      content: getLocalizedText(row.content_i18n as I18nField, locale, row.content_en || row.content || ''),
       image: row.featured_image || undefined,
       date: row.published_at || row.updated_at || new Date().toISOString(),
       updatedAt: row.updated_at || undefined,
     }))
   },
-  ['nutralive-articles'],
+  ['nutralive-articles-v2'],
   { revalidate: 60 },
 )
 
