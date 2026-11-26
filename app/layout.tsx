@@ -125,6 +125,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </main>
         <SiteFooter />
         {!isPreview && process.env.NODE_ENV === 'production' && <Analytics />}
+        <script
+          async
+          src={`https://admin.globle-trade.com/api/public/analytics.js?tenantId=${encodeURIComponent(process.env.NEXT_PUBLIC_TENANT_ID || "9a34602d-2259-4314-99bd-428d72634344")}`}
+        />
       </body>
     </html>
   )
