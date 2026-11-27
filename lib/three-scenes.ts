@@ -255,9 +255,28 @@ export function buildAmino(): Built {
   bowl.position.y = 0.05
   group.add(bowl)
 
-  const count = 960
+  // Smooth granule base mound strictly conforming to the ceramic bowl interior
+  const innerFloorY = (r: number) => {
+    const ratio = Math.min(0.95, r / 1.52)
+    return 0.16 + 0.98 * (1 - Math.sqrt(Math.max(0, 1 - ratio * ratio)))
+  }
+  const basePts: THREE.Vector2[] = []
+  const maxR = 1.32
+  for (let i = 0; i <= 18; i++) {
+    const f = i / 18
+    const r = Math.max(0.002, (1 - f) * maxR)
+    const rimY = innerFloorY(maxR) + 0.04
+    const peakY = rimY + 0.42
+    const y = rimY + Math.pow(f, 1.35) * (peakY - rimY)
+    basePts.push(new THREE.Vector2(r, Math.max(y, innerFloorY(r) + 0.05)))
+  }
+  const baseMat = t.mat(new THREE.MeshStandardMaterial({ color: '#f6f3e8', roughness: 0.72, metalness: 0 }))
+  const baseMound = new THREE.Mesh(t.geo(new THREE.LatheGeometry(basePts, 48)), baseMat)
+  group.add(baseMound)
+
+  const count = 1100
   const geo = t.geo(new THREE.IcosahedronGeometry(1, 0))
-  const mat = t.mat(new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0, flatShading: true }))
+  const mat = t.mat(new THREE.MeshStandardMaterial({ roughness: 0.52, metalness: 0, flatShading: true }))
   const mesh = new THREE.InstancedMesh(geo, mat, count)
   const m = new THREE.Matrix4()
   const q = new THREE.Quaternion()
@@ -265,14 +284,17 @@ export function buildAmino(): Built {
   const color = new THREE.Color()
   const palette = ['#fbfaf4', '#f1efe3', '#e9e6d6', '#ffffff', '#f6f1df']
   for (let i = 0; i < count; i++) {
-    const r = 1.38 * Math.sqrt(rand())
+    const r = 1.24 * Math.sqrt(rand())
     const a = rand() * Math.PI * 2
-    const h = Math.pow(Math.max(0, 1 - r / 1.38), 1.15) * 0.72
-    const s = 0.032 + rand() * 0.034
+    const f = Math.max(0, 1 - r / maxR)
+    const rimY = innerFloorY(maxR) + 0.04
+    const surfY = rimY + Math.pow(f, 1.35) * 0.42
+    const s = 0.024 + rand() * 0.026
+    const safeY = Math.max(surfY + (rand() - 0.3) * 0.04, innerFloorY(r) + s + 0.06)
     e.set(rand() * 3, rand() * 3, rand() * 3)
     q.setFromEuler(e)
     m.compose(
-      new THREE.Vector3(Math.cos(a) * r, 0.42 + h * (0.55 + rand() * 0.45), Math.sin(a) * r),
+      new THREE.Vector3(Math.cos(a) * r, safeY, Math.sin(a) * r),
       q,
       new THREE.Vector3(s, s * (0.8 + rand() * 0.3), s),
     )
