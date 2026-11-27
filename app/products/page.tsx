@@ -4,7 +4,7 @@ import { ProductExplorer } from '@/components/products/product-explorer'
 import { getCategories, getFullIngredientDatabase, getProducts, type CategorySlug } from '@/lib/catalog'
 import { CONTAINER } from '@/lib/site'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export const metadata: Metadata = {
   title: 'Products — Herbal Extracts, Amino Acids & Functional Ingredients',

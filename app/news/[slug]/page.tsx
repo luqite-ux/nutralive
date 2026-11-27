@@ -6,7 +6,7 @@ import { PageHero } from '@/components/site/page-hero'
 import { getNewsBySlug } from '@/lib/news'
 import { COMPANY, CONTAINER } from '@/lib/site'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params

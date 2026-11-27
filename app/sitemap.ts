@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { getProducts } from '@/lib/catalog'
 import { getAllNews } from '@/lib/news'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()

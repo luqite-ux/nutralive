@@ -9,7 +9,7 @@ import { getProductBySlug, getProducts, TRADE_TERMS } from '@/lib/catalog'
 import { getSector } from '@/lib/sectors'
 import { COMPANY, CONTAINER, IMG } from '@/lib/site'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export async function generateStaticParams() {
   const products = await getProducts('en')

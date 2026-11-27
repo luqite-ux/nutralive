@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json(
-        { ok: false, error: 'Unable to record inquiry at this time. Please email info@nutralivegroup.com.' },
+        { ok: false, error: 'Unable to record inquiry at this time. Please email info@nutraliveingredients.com.' },
         { status: 500 },
       )
     }

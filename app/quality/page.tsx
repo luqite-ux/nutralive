@@ -7,7 +7,7 @@ import { CertificateGallery } from '@/components/site/certificate-gallery'
 import { CUSTOMER_GALLERIES } from '@/lib/customer-galleries'
 import { CONTAINER, IMG } from '@/lib/site'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export const metadata: Metadata = {
   title: 'Quality — Certifications, HPLC/GC Lab & Qualification Process',

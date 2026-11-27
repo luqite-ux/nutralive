@@ -5,7 +5,7 @@ import { GlobalPartnerSectors } from '@/components/home/global-partner-sectors'
 import { CUSTOMER_GALLERIES } from '@/lib/customer-galleries'
 import { COMPANY, CONTAINER } from '@/lib/site'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export const metadata: Metadata = {
   title: 'About NutraLive — Nutralive Co.,Ltd, Nanjing',

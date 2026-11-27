@@ -11,7 +11,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', display: 'swap' })
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

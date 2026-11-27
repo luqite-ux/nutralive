@@ -33,7 +33,7 @@ export const COMPANY = {
     { label: '0086 (0)25 5218 3406', href: 'tel:+862552183406' },
     { label: '0086 153 8084 0764', href: 'tel:+8615380840764' },
   ],
-  email: 'info@nutralivegroup.com',
+  email: 'info@nutraliveingredients.com',
   markets: ['Europe', 'United States', 'Asia', 'Southeast Asia'],
 } as const
 

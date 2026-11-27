@@ -92,7 +92,7 @@ export function RfqForm({ defaultProduct = '', idPrefix = 'rfq' }: { defaultProd
       setCaptchaValue('')
       setStatus('success')
     } catch {
-      setError('Network error. Please try again or email info@nutralivegroup.com directly.')
+      setError('Network error. Please try again or email info@nutraliveingredients.com directly.')
       setStatus('idle')
     }
   }

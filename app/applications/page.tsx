@@ -9,7 +9,7 @@ import { getProducts } from '@/lib/catalog'
 import { CONTAINER } from '@/lib/site'
 import { Button } from '@/components/ui/button'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export const metadata: Metadata = {
   title: 'Applications — Six Health Sectors',

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { getAllNews } from '@/lib/news'
 import { CONTAINER } from '@/lib/site'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export const metadata: Metadata = {
   title: 'News',

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { CUSTOMER_GALLERIES } from '@/lib/customer-galleries'
 import { CONTAINER, IMG } from '@/lib/site'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutralive.com').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nutraliveingredients.com').replace(/\/$/, '')
 
 export const metadata: Metadata = {
   title: 'Custom Processing — Granulation, Premix, Tableting & Hard Capsules',
