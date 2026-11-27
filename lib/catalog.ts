@@ -65,14 +65,14 @@ export const TRADE_TERMS = {
 const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID?.trim() || '9a34602d-2259-4314-99bd-428d72634344'
 
 function inferSectors(product: { name: string; category: string; uses: string[]; description: string }): string[] {
-  const hay = `${product.name} ${product.uses.join(' ')} ${product.description}`.toLowerCase()
+  const n = product.name.toLowerCase()
   const out = new Set<string>()
-  if (/skin|collagen|antioxidant|phycocyanin|astaxanthin|hyaluronic|grape|resveratrol|green tea|cosmetic|beauty|pearl|tocopherol|aloe|acai|pomegranate|cranberry/.test(hay)) out.add('skin-care')
-  if (/joint|turmeric|curcumin|boswellia|glucosamine|chondroitin|msm|hyaluronic|ginger|cissus|collagen/.test(hay)) out.add('joint-health')
-  if (/cardio|berberine|coq10|coenzyme|omega|dha|phytosterol|hawthorn|garlic|ginkgo|resveratrol|beet|polyphenol|nattokinase|red yeast|artichoke|cinnamon/.test(hay)) out.add('cardiovascular-health')
-  if (/cognit|brain|memory|ginkgo|phosphatidyl|lion|bacopa|theanine|ashwagandha|rhodiola|dha|nmn|focus|neuro|inositol|tryptophan/.test(hay)) out.add('cognition-improvement')
-  if (/sport|muscle|amino|bcaa|leucine|isoleucine|valine|glutamine|arginine|citrulline|carnitine|taurine|creatine|beet|protein|chlorella|spirulina|maca|alanine|mct|wheat|kale/.test(hay)) out.add('sports-nutrition')
-  if (/vision|eye|lutein|zeaxanthin|bilberry|blueberry|astaxanthin|marigold|anthocyanin|goji|black currant/.test(hay)) out.add('vision-protection')
+  if (/phycocyanin|acai|grape seed|pomegranate|cranberry|aloe vera|tocopherol|vitamin e/.test(n)) out.add('skin-care')
+  if (/turmeric|curcumin|maitake|chaga|shiitake|dandelion|cinnamon/.test(n)) out.add('joint-health')
+  if (/berberine|phytosterol|dha|artichoke|cinnamon|tocopherol|beet root|grape seed/.test(n)) out.add('cardiovascular-health')
+  if (/dha|tryptophan|inositol|mct|maitake|chaga/.test(n)) out.add('cognition-improvement')
+  if (/isoleucine|tryptophan|alanine|mct|beet root|sunflower|chlorella|kale|wheat grass/.test(n)) out.add('sports-nutrition')
+  if (/goji|black currant|dha|acai|cranberry|kale/.test(n)) out.add('vision-protection')
   if (out.size === 0) out.add('cardiovascular-health')
   return [...out]
 }

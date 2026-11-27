@@ -50,6 +50,46 @@ function bond(a: THREE.Vector3, b: THREE.Vector3, geo: THREE.BufferGeometry, mat
   return mesh
 }
 
+function createPowderTextures(baseHex: string, lightHex: string, darkHex: string, seed: number) {
+  const rand = mulberry32(seed)
+  const size = 256
+  const colorCanvas = document.createElement('canvas')
+  colorCanvas.width = colorCanvas.height = size
+  const cctx = colorCanvas.getContext('2d')!
+  cctx.fillStyle = baseHex
+  cctx.fillRect(0, 0, size, size)
+
+  const bumpCanvas = document.createElement('canvas')
+  bumpCanvas.width = bumpCanvas.height = size
+  const bctx = bumpCanvas.getContext('2d')!
+  bctx.fillStyle = '#808080'
+  bctx.fillRect(0, 0, size, size)
+
+  for (let i = 0; i < 18000; i++) {
+    const x = rand() * size
+    const y = rand() * size
+    const r = 0.6 + rand() * 1.4
+    cctx.fillStyle = rand() > 0.5 ? lightHex : darkHex
+    cctx.globalAlpha = 0.28 + rand() * 0.35
+    cctx.fillRect(x, y, r, r)
+
+    const g = Math.floor(90 + rand() * 140)
+    bctx.fillStyle = `rgb(${g},${g},${g})`
+    bctx.fillRect(x, y, r, r)
+  }
+
+  const map = new THREE.CanvasTexture(colorCanvas)
+  map.wrapS = map.wrapT = THREE.RepeatWrapping
+  map.repeat.set(4, 4)
+  map.colorSpace = THREE.SRGBColorSpace
+
+  const bumpMap = new THREE.CanvasTexture(bumpCanvas)
+  bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping
+  bumpMap.repeat.set(4, 4)
+
+  return { map, bumpMap }
+}
+
 function dishWithPowder(t: ReturnType<typeof tracker>, group: THREE.Group, palette: string[], count: number, seed: number) {
   const rand = mulberry32(seed)
   const glass = t.mat(
@@ -75,22 +115,50 @@ function dishWithPowder(t: ReturnType<typeof tracker>, group: THREE.Group, palet
   wall.position.y = 0.15
   group.add(wall)
 
-  const geo = t.geo(new THREE.SphereGeometry(1, 8, 6))
-  const mat = t.mat(new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0 }))
-  const mesh = new THREE.InstancedMesh(geo, mat, count)
+  // Smooth fine-powder mound core with procedural micro-grain bump texture
+  const R = 1.48
+  const moundPts: THREE.Vector2[] = []
+  for (let i = 0; i <= 24; i++) {
+    const f = i / 24
+    const r = Math.max(0.002, (1 - f) * R)
+    const y = 0.1 + Math.pow(f, 1.45) * 0.88 + Math.sin(f * Math.PI) * 0.05
+    moundPts.push(new THREE.Vector2(r, y))
+  }
+  const { map, bumpMap } = createPowderTextures(palette[0], palette[4] || palette[1], palette[3] || palette[2], seed + 99)
+  const moundMat = t.mat(
+    new THREE.MeshStandardMaterial({
+      map,
+      bumpMap,
+      bumpScale: 0.045,
+      roughness: 0.96,
+      metalness: 0,
+    }),
+  )
+  const mound = new THREE.Mesh(t.geo(new THREE.LatheGeometry(moundPts, 64)), moundMat)
+  group.add(mound)
+
+  // Fine surface micro-powder dust particles (5x finer than spheres)
+  const fineCount = Math.max(count, 4200)
+  const geo = t.geo(new THREE.DodecahedronGeometry(1, 0))
+  const mat = t.mat(new THREE.MeshStandardMaterial({ roughness: 0.96, metalness: 0 }))
+  const mesh = new THREE.InstancedMesh(geo, mat, fineCount)
   const m = new THREE.Matrix4()
   const q = new THREE.Quaternion()
+  const e = new THREE.Euler()
   const color = new THREE.Color()
-  const R = 1.45
-  for (let i = 0; i < count; i++) {
-    const r = R * Math.sqrt(rand())
+  for (let i = 0; i < fineCount; i++) {
+    const u = rand()
+    const r = R * 0.98 * Math.sqrt(u)
     const a = rand() * Math.PI * 2
-    const h = Math.pow(Math.max(0, 1 - r / R), 1.25) * 0.85
-    const s = 0.045 + rand() * 0.04
+    const f = Math.max(0, 1 - r / R)
+    const surfY = 0.1 + Math.pow(f, 1.45) * 0.88 + Math.sin(f * Math.PI) * 0.05
+    const s = 0.009 + rand() * 0.013
+    e.set(rand() * 3, rand() * 3, rand() * 3)
+    q.setFromEuler(e)
     m.compose(
-      new THREE.Vector3(Math.cos(a) * r, 0.1 + h * (0.55 + rand() * 0.45) + s * 0.5, Math.sin(a) * r),
+      new THREE.Vector3(Math.cos(a) * r, surfY + (rand() - 0.35) * 0.025, Math.sin(a) * r),
       q,
-      new THREE.Vector3(s, s * 0.85, s),
+      new THREE.Vector3(s, s * 0.72, s),
     )
     mesh.setMatrixAt(i, m)
     color.set(palette[Math.floor(rand() * palette.length)])
@@ -99,12 +167,17 @@ function dishWithPowder(t: ReturnType<typeof tracker>, group: THREE.Group, palet
   mesh.instanceMatrix.needsUpdate = true
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
   group.add(mesh)
+
+  return () => {
+    map.dispose()
+    bumpMap.dispose()
+  }
 }
 
 export function buildBotanical(): Built {
   const t = tracker()
   const group = new THREE.Group()
-  dishWithPowder(t, group, ['#d99a1e', '#e3ae35', '#c98a12', '#b8860b', '#e8bb4d'], 1500, 7)
+  const disposePowderTex = dishWithPowder(t, group, ['#d99a1e', '#e3ae35', '#c98a12', '#b8860b', '#e8bb4d'], 4200, 7)
 
   const mol = new THREE.Group()
   const carbon = t.mat(new THREE.MeshStandardMaterial({ color: '#1E4620', roughness: 0.45 }))
@@ -154,7 +227,10 @@ export function buildBotanical(): Built {
       mol.position.y = 2.15 + Math.sin(time * 1.1) * 0.06
       mol.rotation.y = Math.sin(time * 0.5) * 0.35
     },
-    dispose: t.dispose,
+    dispose: () => {
+      disposePowderTex()
+      t.dispose()
+    },
   }
 }
 
@@ -179,9 +255,9 @@ export function buildAmino(): Built {
   bowl.position.y = 0.05
   group.add(bowl)
 
-  const count = 360
+  const count = 960
   const geo = t.geo(new THREE.IcosahedronGeometry(1, 0))
-  const mat = t.mat(new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0, flatShading: true }))
+  const mat = t.mat(new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0, flatShading: true }))
   const mesh = new THREE.InstancedMesh(geo, mat, count)
   const m = new THREE.Matrix4()
   const q = new THREE.Quaternion()
@@ -189,14 +265,14 @@ export function buildAmino(): Built {
   const color = new THREE.Color()
   const palette = ['#fbfaf4', '#f1efe3', '#e9e6d6', '#ffffff', '#f6f1df']
   for (let i = 0; i < count; i++) {
-    const r = 1.35 * Math.sqrt(rand())
+    const r = 1.38 * Math.sqrt(rand())
     const a = rand() * Math.PI * 2
-    const h = Math.pow(Math.max(0, 1 - r / 1.35), 1.1) * 0.75
-    const s = 0.085 + rand() * 0.075
+    const h = Math.pow(Math.max(0, 1 - r / 1.38), 1.15) * 0.72
+    const s = 0.032 + rand() * 0.034
     e.set(rand() * 3, rand() * 3, rand() * 3)
     q.setFromEuler(e)
     m.compose(
-      new THREE.Vector3(Math.cos(a) * r, 0.42 + h * (0.5 + rand() * 0.5), Math.sin(a) * r),
+      new THREE.Vector3(Math.cos(a) * r, 0.42 + h * (0.55 + rand() * 0.45), Math.sin(a) * r),
       q,
       new THREE.Vector3(s, s * (0.8 + rand() * 0.3), s),
     )

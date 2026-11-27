@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { CheckCircle2, Clock, FileCheck2, FlaskConical, Leaf, Package } from 'lucide-react'
+import { CheckCircle2, Clock, FileCheck2, FlaskConical, Leaf, Mail, MapPin, Package, Phone, ShieldCheck } from 'lucide-react'
 import { PageHero } from '@/components/site/page-hero'
 import { ProductCard } from '@/components/site/product-card'
+import { ProductDetailGallery, ProductHeroGallery, type GalleryItem } from '@/components/products/product-gallery'
 import { RfqForm } from '@/components/site/rfq-form'
 import { getProductBySlug, getProducts, TRADE_TERMS } from '@/lib/catalog'
 import { getSector } from '@/lib/sectors'
@@ -95,6 +96,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ],
   }
 
+  const heroGallery = product.gallery.length > 0 ? product.gallery.slice(0, 3) : (product.image ? [product.image] : [])
+  const detailPhotos: GalleryItem[] = [
+    ...product.gallery.slice(3).map((url, idx) => ({
+      url,
+      alt: `${product.name} material close-up view ${idx + 4}`,
+      caption: `${product.name} — close-up material appearance and texture (${idx + 1})`,
+    })),
+    {
+      url: IMG.packaging,
+      alt: 'NutraLive sample bottles and aluminum foil pouches',
+      caption: 'Sample dispatch format: NutraLive-labelled bottles and sealed aluminum foil pouches with COA & SPEC.',
+    },
+    {
+      url: IMG.warehouse,
+      alt: '25 kg fiber drums stacked on pallets in NutraLive warehouse',
+      caption: 'Commercial bulk packaging: 25 kg fiber drums with double food-grade inner liner, palletized for export.',
+    },
+  ]
+
   return (
     <>
       <script
@@ -111,51 +131,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <section className="bg-white py-12 lg:py-16">
         <div className={`${CONTAINER} grid gap-10 lg:grid-cols-[1.05fr_1fr]`}>
           <div>
-            <div className="aspect-[4/3] overflow-hidden rounded-3xl border border-sage bg-cream">
-              {product.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="size-full object-cover"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-forest">{product.name}</div>
-              )}
-            </div>
-
-            {product.gallery.length > 1 && (
-              <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {product.gallery.slice(0, 8).map((imgUrl, idx) => (
-                  <div key={imgUrl} className="aspect-[4/3] overflow-hidden rounded-xl border border-sage bg-cream">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imgUrl}
-                      alt={`${product.name} sample view ${idx + 1}`}
-                      loading="lazy"
-                      className="size-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={IMG.packaging}
-                alt="NutraLive sample bottles and foil pouches"
-                loading="lazy"
-                className="aspect-[4/3] w-full rounded-2xl border border-sage object-cover"
-              />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={IMG.warehouse}
-                alt="25 kg fiber drums on pallets"
-                loading="lazy"
-                className="aspect-[4/3] w-full rounded-2xl border border-sage object-cover"
-              />
-            </div>
+            <ProductHeroGallery productName={product.name} images={heroGallery} />
           </div>
 
           <div>
@@ -236,17 +212,88 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <section id="rfq" className="border-y border-sage bg-cream py-14 lg:py-20">
-        <div className={`${CONTAINER} grid gap-10 lg:grid-cols-[1fr_1.2fr]`}>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-leaf-dark">Product inquiry</p>
-            <h2 className="mt-2 text-3xl font-semibold">Request a quote for {product.name}</h2>
-            <p className="mt-4 text-muted-foreground">
-              Tell us the quantity and destination. We will reply with availability, sample options and the COA and
-              SPEC for this ingredient.
+      <section className="border-t border-sage bg-white py-14 lg:py-20">
+        <div className={CONTAINER}>
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-leaf-dark">Product Visual Details</p>
+            <h2 className="mt-2 font-display text-3xl font-semibold text-forest-deep">
+              Material Appearance, Sample &amp; Bulk Packaging
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Inspect real lot photography, particle texture, sample dispatch bottles and 25 kg fiber-drum export packaging. Click any image to zoom.
             </p>
           </div>
-          <div className="rounded-3xl border border-sage bg-white p-7 lg:p-9">
+          <div className="mt-8">
+            <ProductDetailGallery productName={product.name} items={detailPhotos} />
+          </div>
+        </div>
+      </section>
+
+      <section id="rfq" className="border-y border-sage bg-cream py-14 lg:py-20">
+        <div className={`${CONTAINER} grid items-start gap-10 lg:grid-cols-[1fr_1.2fr]`}>
+          <div className="space-y-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-leaf-dark">Product inquiry</p>
+              <h2 className="mt-2 text-3xl font-semibold">Request a quote for {product.name}</h2>
+              <p className="mt-4 text-muted-foreground">
+                Tell us the quantity and destination. We will reply with availability, sample options and the COA and
+                SPEC for this ingredient.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-sage bg-white p-6">
+              <h3 className="font-sans text-sm font-semibold uppercase tracking-wider text-forest-deep">
+                Direct supply support
+              </h3>
+              <ul className="mt-4 space-y-3 text-sm text-foreground/85">
+                <li className="flex items-start gap-3">
+                  <FileCheck2 className="mt-0.5 size-4 shrink-0 text-leaf-dark" aria-hidden="true" />
+                  <span>Full COA, SPEC sheet, SDS and flow chart provided with every inquiry</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <FlaskConical className="mt-0.5 size-4 shrink-0 text-leaf-dark" aria-hidden="true" />
+                  <span>Evaluation samples shipped in NutraLive-labelled bottles or foil pouches</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Package className="mt-0.5 size-4 shrink-0 text-leaf-dark" aria-hidden="true" />
+                  <span>Standard MOQ from 25 kg; custom granulation, premix, tablets &amp; capsules from 500 kg</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-leaf-dark" aria-hidden="true" />
+                  <span>ISO 9001 · ISO 22000 · HACCP · Halal · USDA NOP Organic certified supply</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-sage bg-white p-6">
+              <h3 className="font-sans text-sm font-semibold uppercase tracking-wider text-forest-deep">
+                Direct Contact — {COMPANY.legalName}
+              </h3>
+              <ul className="mt-4 space-y-3 text-sm text-foreground/85">
+                <li className="flex items-start gap-3">
+                  <Mail className="mt-0.5 size-4 shrink-0 text-forest" aria-hidden="true" />
+                  <a href={`mailto:${COMPANY.email}`} className="font-medium text-forest hover:underline">
+                    {COMPANY.email}
+                  </a>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Phone className="mt-0.5 size-4 shrink-0 text-forest" aria-hidden="true" />
+                  <span className="flex flex-col">
+                    {COMPANY.phones.map((p) => (
+                      <a key={p.href} href={p.href} className="hover:text-forest hover:underline">
+                        {p.label}
+                      </a>
+                    ))}
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <MapPin className="mt-0.5 size-4 shrink-0 text-forest" aria-hidden="true" />
+                  <span className="text-muted-foreground">{COMPANY.address}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="rounded-3xl border border-sage bg-white p-7 shadow-sm lg:p-9">
             <RfqForm defaultProduct={`${product.name} — ${product.spec}`} idPrefix="product-rfq" />
           </div>
         </div>
