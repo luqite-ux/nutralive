@@ -12,7 +12,7 @@ export const IMG = {
   tocopherol: `${R2_PACK}/rep-tocopherol-oil.jpg`,
   beetroot: `${R2_PACK}/rep-beetroot.jpg`,
   chlorella: `${R2_PACK}/rep-chlorella.jpg`,
-  packaging: `${R2_PACK}/rep-sample-packaging.jpg`,
+  packaging: 'https://pub-c7a22068052144a5805830c30d280128.r2.dev/nutralive/company-v2/packaging-samples/nutralive-packaging-samples-06.jpg',
   labHplc: `${R2_PACK}/rep-lab-hplc.jpg`,
   factory: `${R2_PACK}/rep-factory-cleanroom.jpg`,
   warehouse: `${R2_PACK}/rep-warehouse-drums.jpg`,
